@@ -186,6 +186,23 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	return index, term, isLeader
 }
 
+type AppendEntriesArgs struct {
+	// Your data here (2A, 2B).
+}
+
+type AppendEntriesReply struct {
+	// Your data here (2A).
+}
+
+func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply) {
+	// Your code here (2A, 2B).
+}
+
+func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *AppendEntriesReply) bool {
+	ok := rf.peers[server].Call("Raft.AppendEntries", args, reply)
+	return ok
+}
+
 //
 // the tester calls Kill() when a Raft instance won't
 // be needed again. you are not required to do anything
@@ -220,4 +237,24 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.readPersist(persister.ReadRaftState())
 
 	return rf
+}
+
+func (rf *Raft) RequestVoteThread() {
+	// TODO : RequestVoteThread
+}
+
+func (rf *Raft) AppendEntriesThread() {
+	// TODO : AppendEntriesThread
+}
+
+func (rf *Raft) becomeFollower() {
+	// TODO: inline function to become follower
+}
+
+func (rf *Raft) becomeCandidate() {
+	// TODO: inline function to become candidate
+}
+
+func (rf *Raft) becomeLeader() {
+	// TODO: inline function to become leader
 }
