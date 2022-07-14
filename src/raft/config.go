@@ -10,10 +10,8 @@ package raft
 
 import (
 	"Raft/labrpc"
-	"io"
 	"log"
 	"math/rand"
-	"os"
 	"runtime"
 	"sync"
 	"testing"
@@ -508,5 +506,5 @@ func (cfg *config) end() {
 }
 
 func printLog(str string) {
-	io.WriteString(os.Stderr, fmt.Sprintf("[tester]%s", str))
+	PrintLog(fmt.Sprintf("[tester] %s", str))
 }

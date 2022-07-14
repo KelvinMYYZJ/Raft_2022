@@ -57,6 +57,8 @@ const (
 )
 const NIDX int = -1
 
+var StartTime time.Time = time.Now()
+
 type LogType struct {
 	Term    int
 	Command interface{}
@@ -362,7 +364,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 // region state changing function (DONT LOCK!!!)
 func (rf *Raft) becomeFollower() {
 	rf.state = Follower
-	rf.printLog(toString(rf.me) + " become follower")
+	rf.printLog("become follower")
 	rf.resetElectionTimeout()
 	// TODO: inline function to become follower
 }
@@ -370,7 +372,7 @@ func (rf *Raft) becomeFollower() {
 func (rf *Raft) becomeCandidate() {
 	rf.currentTerm++
 	rf.state = Candidate
-	rf.printLog(toString(rf.me) + " become candidate")
+	rf.printLog("become candidate")
 	rf.voteFor = rf.me
 	voteCnt := voteCounter{}
 	voteCnt.val = 1
@@ -393,7 +395,7 @@ func (rf *Raft) becomeCandidate() {
 func (rf *Raft) becomeLeader() {
 	// TODO: inline function to become leader
 	rf.state = Leader
-	rf.printLog(toString(rf.me) + " become leader")
+	rf.printLog("become leader")
 	rf.nextIndex = make([]int, len(rf.peers))
 	for i := range rf.nextIndex {
 		rf.nextIndex[i] = len(rf.log) // TODO : may be wrong
@@ -489,11 +491,13 @@ func (rf *Raft) resetElectionTimeout() {
 
 func (rf *Raft) printLog(str string) {
 	if rf.state != Dead {
-		io.WriteString(os.Stderr, fmt.Sprintf("[%d] %s\n", rf.me, str))
+		// io.WriteString(os.Stderr, fmt.Sprintf("{%d} [%d] %s\n", time.Now().UnixNano()-StartTime.UnixNano(), rf.me, str))
+		PrintLog(fmt.Sprintf("[%d] %s", rf.me, str))
 	}
 }
-func toString(obj int) string {
-	return fmt.Sprintf("%d", obj)
+
+func PrintLog(str string) {
+	io.WriteString(os.Stderr, fmt.Sprintf("{%12d} %s\n", time.Now().UnixNano()-StartTime.UnixNano(), str))
 }
 
 // endregion tool functions
