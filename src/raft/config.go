@@ -8,17 +8,22 @@ package raft
 // test with the original before submitting.
 //
 
-import "Raft/labrpc"
-import "log"
-import "sync"
-import "testing"
-import "runtime"
-import "math/rand"
-import crand "crypto/rand"
-import "math/big"
-import "encoding/base64"
-import "time"
-import "fmt"
+import (
+	"Raft/labrpc"
+	"io"
+	"log"
+	"math/rand"
+	"os"
+	"runtime"
+	"sync"
+	"testing"
+
+	crand "crypto/rand"
+	"encoding/base64"
+	"fmt"
+	"math/big"
+	"time"
+)
 
 func randstring(n int) string {
 	b := make([]byte, 2*n)
@@ -233,7 +238,7 @@ func (cfg *config) cleanup() {
 
 // attach server i to the net.
 func (cfg *config) connect(i int) {
-	// fmt.Printf("connect(%d)\n", i)
+	printLog(fmt.Sprintf("connect(%d)\n", i))
 
 	cfg.connected[i] = true
 
@@ -256,7 +261,7 @@ func (cfg *config) connect(i int) {
 
 // detach server i from the net.
 func (cfg *config) disconnect(i int) {
-	// fmt.Printf("disconnect(%d)\n", i)
+	printLog(fmt.Sprintf("disconnect(%d)\n", i))
 
 	cfg.connected[i] = false
 
@@ -500,4 +505,8 @@ func (cfg *config) end() {
 		fmt.Printf("  ... Passed --")
 		fmt.Printf("  %4.1f  %d %4d %4d\n", t, npeers, nrpc, ncmds)
 	}
+}
+
+func printLog(str string) {
+	io.WriteString(os.Stderr, fmt.Sprintf("[tester]%s", str))
 }
