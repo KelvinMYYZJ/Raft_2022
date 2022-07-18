@@ -506,5 +506,5 @@ func (cfg *config) end() {
 }
 
 func printLog(str string) {
-	PrintLog(fmt.Sprintf("[tester] %s", str))
+	PrintfLog("[tester] %s", str)
 }

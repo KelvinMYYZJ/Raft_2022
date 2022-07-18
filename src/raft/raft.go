@@ -185,7 +185,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		return
 	}
 	if args.Term > rf.currentTerm {
-		rf.printLog(fmt.Sprintf("term changed %d -> %d", rf.currentTerm, args.Term))
+		rf.printfLog("term changed %d -> %d", rf.currentTerm, args.Term)
 		rf.currentTerm = args.Term
 		rf.voteFor = NIDX
 	}
@@ -292,7 +292,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 	defer func() {
-		rf.printLog(log)
+		rf.printfLog(log)
 	}()
 	reply.Term = rf.currentTerm
 	if args.Term < rf.currentTerm {
@@ -315,6 +315,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		return
 	}
 	if rf.log[args.PrevLogIndex].Term != args.PrevLogTerm {
+		// rf.printLog(fmt.Sprintf())
 		// term not match, send not success and the index of the first entry with term == rf.log[args.PrevLogIndex].Term
 		newNextIndex := args.PrevLogIndex
 		for ; rf.log[newNextIndex].Term == rf.log[args.PrevLogIndex].Term; newNextIndex-- {
@@ -350,7 +351,7 @@ func (rf *Raft) Kill() {
 	// Your code here, if desired.
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-	rf.printLog("server killed")
+	rf.printfLog("server killed")
 	rf.state = Dead
 }
 
@@ -389,7 +390,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 
 	go rf.startWorking()
 	rf.mu.Lock()
-	rf.printLog("server made")
+	rf.printfLog("server made")
 	rf.mu.Unlock()
 	return rf
 }
@@ -397,7 +398,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 // region state changing function (DONT LOCK!!!)
 func (rf *Raft) becomeFollower() {
 	rf.state = Follower
-	rf.printLog("become follower")
+	rf.printfLog("become follower")
 	rf.resetElectionTimeout()
 	// TODO: inline function to become follower
 }
@@ -405,7 +406,7 @@ func (rf *Raft) becomeFollower() {
 func (rf *Raft) becomeCandidate() {
 	rf.currentTerm++
 	rf.state = Candidate
-	rf.printLog("become candidate")
+	rf.printfLog("become candidate")
 	rf.voteFor = rf.me
 	voteCnt := voteCounter{}
 	voteCnt.val = 1
@@ -427,7 +428,7 @@ func (rf *Raft) becomeCandidate() {
 
 func (rf *Raft) becomeLeader() {
 	// TODO: inline function to become leader
-	rf.printLog("become leader")
+	rf.printfLog("become leader")
 	rf.state = Leader
 	rf.nextIndex = make([]int, len(rf.peers))
 	logLen := rf.getLogLen()
@@ -472,12 +473,12 @@ func (rf *Raft) RequestVoteThread(peerIndex int, args *RequestVoteArgs, voteCnt 
 
 func (rf *Raft) AppendEntriesThread(peerIndex int, args *AppendEntriesArgs) {
 	reply := &AppendEntriesReply{}
-	rf.printLog(fmt.Sprintf("send a AppendEntries request to %d,detail:\t%+v", peerIndex, *args))
+	rf.printfLog("send a AppendEntries request to %d,detail:\t%+v", peerIndex, *args)
 	ok := rf.sendAppendEntries(peerIndex, args, reply)
 	if !ok {
 		return
 	}
-	rf.printLog(fmt.Sprintf("recieve a AppendEntries reply from %d,detail:\t%+v", peerIndex, *reply))
+	rf.printfLog("recieve a AppendEntries reply from %d,detail:\t%+v", peerIndex, *reply)
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 	if rf.state != Leader {
@@ -547,7 +548,7 @@ func (rf *Raft) heartbeatThread() {
 			args.PrevLogTerm = rf.log[args.PrevLogIndex].Term
 			args.Entries = rf.log
 			args.LeaderCommit = rf.commitIndex
-			rf.printLog(fmt.Sprintf("send a heartbeat to %d", i))
+			rf.printfLog("send a heartbeat to %d", i)
 			go rf.AppendEntriesThread(i, args)
 		}
 		rf.mu.Unlock()
@@ -590,14 +591,14 @@ func (rf *Raft) leaderUpdateCommitIndex() {
 	}
 }
 
-func (rf *Raft) printLog(str string) {
+func (rf *Raft) printfLog(format string, a ...interface{}) {
 	if rf.state != Dead {
-		PrintLog(fmt.Sprintf("[%d] %s", rf.me, str))
+		PrintfLog("[%d] %s", rf.me, fmt.Sprintf(format, a...))
 	}
 }
 
-func PrintLog(str string) {
-	io.WriteString(os.Stderr, fmt.Sprintf("{%12d} %s\n", time.Now().UnixMilli()-StartTime.UnixMilli(), str))
+func PrintfLog(format string, a ...interface{}) {
+	io.WriteString(os.Stderr, fmt.Sprintf("{%12d} %s\n", time.Now().UnixMilli()-StartTime.UnixMilli(), fmt.Sprintf(format, a...)))
 }
 
 // endregion tool functions
